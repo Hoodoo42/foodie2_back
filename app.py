@@ -1,3 +1,5 @@
+from lib2to3.pgen2 import token
+from unittest import result
 from dbcreds import production_mode
 import dbhelpers as dbh
 from flask import Flask, request, make_response
@@ -43,31 +45,93 @@ def delete_client():
         return make_response(json.dumps(is_valid, default=str), 400)
 
     results = dbh.run_statement('CALL client_delete(?,?)', [request.json.get('token'), request.json.get('password')])
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else:
+        return make_response(json.dumps("sorry error", default=str), 500)    
 
 # @app.patch('/api/client')
 # def update_client():
+    
 
 # ## CLIENT LOGIN
 
-# @app.post('/api/client_login')
-# def login_client():
-#     is_valid = apih.check_endpoint_info(request.json('email', 'password'))
-#     if(is_valid != None):
-#         return make_response(json.dumps(is_valid, default=str), 400)
+@app.post('/api/client_login')
+def login_client():
+    is_valid = apih.check_endpoint_info(request.json, ['email', 'password'])
+    if(is_valid != None):
+        return make_response(json.dumps(is_valid, default=str), 400)
 
-#     results = dbh.run_statement('CALL client_login(?,?)', [request.json.get('email'), request.json.get('password')])   
-#     if(type(results) == list):
+    token = uuid4().hex
+    results = dbh.run_statement('CALL client_login(?,?,?)', [request.json.get('email'), request.json.get('password'), token])   
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else:
+        return make_response(json.dumps('sorry, error', default=str), 500)
+        
+
+# delete token for client logout. token is from client_session.
+@app.delete('/api/client_login')
+def logout_client():
+    is_valid = apih.check_endpoint_info(request.json, ['token'])
+    if(is_valid != None):
+        return make_response(json.dumps(is_valid, default=str), 400)
+
+    results = dbh.run_statement('CALL client_delete(?)', [request.json.get('token')])
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else: 
+        return make_response(json.dumps('sorry error', default=str), 500)       
 
 
-# delete token for client logout. token is from client_session. Needs client password
-# @app.delete('/api/client_login')
-# def logout_client():
+# ## RESTAURANT
+@app.get('/api/restaurant')
+def get_restaurant():
+    is_valid = apih.check_endpoint_info(request.args, ['id'])
+    if(is_valid != None):
+        return make_response(json.dumps(is_valid, default=str), 400)
 
-# needs debugging
+
+    results = dbh.run_statement('CALL restaurant_get(?)', [request.args.get('id')])
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else:
+        return make_response(json.dumps("sorry error", default=str), 500)
+
+# ## RESTAURANT LOGIN
+@app.post('/api/restaurant_login')
+def login_restaurant():
+    is_valid = apih.check_endpoint_info(request.json, ['email', 'password'])
+    if(is_valid != None):
+        return make_response(json.dumps(is_valid, default=str), 400)
+
+    token = uuid4().hex
+    results = dbh.run_statement('CALL restaurant_login(?,?,?)', [request.json.get('email'), request.json.get('password'), token])   
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else:
+        return make_response(json.dumps('sorry, error', default=str), 500)
+
+
+# ###MENU
+@app.post('/api/menu')
+def create_menu():
+    is_valid = apih.check_endpoint_info(request.json, ['name', 'description', 'img', 'price'])
+    if(is_valid != None):
+        return make_response(json.dumps(is_valid, default=str), 400)
+
+
+    results = dbh.run_statement('CALL menu_item_create(?,?,?,?,?)', [request.json.get('name'), request.json.get('description'), request.json.get('img'), request.json.get('price'), request.json.get('token')])
+    if(type(results) == list):
+        return make_response(json.dumps(results, default=str), 200)
+    else:
+        return make_response(json.dumps("sorry error", default=str), 500)
+
+
 # returns all menu items associated with a restaurant
 @app.get('/api/menu')
 def get_menu():
-    is_valid = apih.check_endpoint_info(request.args('restaurant_id'))
+    is_valid = apih.check_endpoint_info(request.args, ['restaurant_id'])
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
 
