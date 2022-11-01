@@ -11,9 +11,12 @@ CORS(app)
 
 # ## CLIENT -- get, post, patch, delete
 
+# use the proper decoration for the necessary endpoint. .get / .post /.delete /.patch
 # .get will use args. this endpoint verifies an id is being recieved. calls the procedure that takes the id and will display the client details related to that id
 @app.get('/api/client')
 def get_client():
+# is_valid is using a helper function that will check for the data, and loop through the expected data and compare it with the sent data. if there is 
+# missing link, it will prompt an error with the specific missing data that needs to be included.
     is_valid = apih.check_endpoint_info(request.args, ['id'])
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
@@ -21,6 +24,9 @@ def get_client():
 # there is only one argument expected, seen by the 1 ?
     results = dbh.run_statement('CALL client_get(?)', [request.args.get('id')])
 
+# if the type of result is a list, meaning something has worked and been gathered, this will send an ok message that the procedure has worked
+# if the expected data did not return then an error message will be prompted. As this function has already determined the user error/success outcome, at this
+# point of failure is on the server side. Though, better error handling could be more specific in understanding what has gone wrong.
     if(type(results) == list):
         return make_response(json.dumps(results, default=str), 200)
     else:
@@ -33,19 +39,24 @@ def create_client():
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
 
-    
+
     results = dbh.run_statement('CALL client_create(?,?,?,?,?,?)', [request.json.get('email'), request.json.get('first_name'), request.json.get('last_name'), request.json.get('username'), request.json.get('img_url'), request.json.get('password')])
     if(type(results) == list):
         return make_response(json.dumps(results, default=str), 200)
     else:
         return make_response(json.dumps("sorry error", default=str), 500)        
 
+
+# when using a header for data request.headers/.get() is used instead of request.json. In postman this information is put in the header section instead of body
 @app.delete('/api/client')
 def delete_client():
     is_valid = apih.check_endpoint_info(request.json, ['password'])
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
-    token = dbh.run_statement('CALL client_token(?)', request.headers.get('token'))
+    
+    # attempting to get token into this mix for client_delete. erroring "client_delete does not exist."
+    token = dbh.run_statement('CALL client_token(?)', request.headers.get('id'))
+   
     results = dbh.run_statement('CALL client_delete(?,?)', [token, request.json.get('password')])
     if(type(results) == list):
         return make_response(json.dumps(results, default=str), 200)
@@ -202,8 +213,8 @@ def delete_menu_itme():
 # @app.get('/api/client_order')
 # def get_client_order():
 
-@app.post('api/client_order')
-def create_client_order():
+# @app.post('api/client_order')
+# def create_client_order():
 
 
 
