@@ -1,6 +1,3 @@
-from lib2to3.pgen2 import token
-from signal import default_int_handler
-from unittest import result
 from dbcreds import production_mode
 import dbhelpers as dbh
 from flask import Flask, request, make_response
@@ -12,14 +9,16 @@ from uuid import uuid4
 app = Flask(__name__)
 CORS(app)
 
-# ## CLIENT
+# ## CLIENT -- get, post, patch, delete
 
+# .get will use args. this endpoint verifies an id is being recieved. calls the procedure that takes the id and will display the client details related to that id
 @app.get('/api/client')
 def get_client():
     is_valid = apih.check_endpoint_info(request.args, ['id'])
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
 
+# there is only one argument expected, seen by the 1 ?
     results = dbh.run_statement('CALL client_get(?)', [request.args.get('id')])
 
     if(type(results) == list):
@@ -29,10 +28,12 @@ def get_client():
 
 @app.post('/api/client')
 def create_client():
+    
     is_valid = apih.check_endpoint_info(request.json, ['email', 'first_name', 'last_name', 'username', 'img_url', 'password'])
     if(is_valid != None):
         return make_response(json.dumps(is_valid, default=str), 400)
 
+    
     results = dbh.run_statement('CALL client_create(?,?,?,?,?,?)', [request.json.get('email'), request.json.get('first_name'), request.json.get('last_name'), request.json.get('username'), request.json.get('img_url'), request.json.get('password')])
     if(type(results) == list):
         return make_response(json.dumps(results, default=str), 200)
@@ -63,7 +64,7 @@ def update_client():
 
     
 
-# ## CLIENT LOGIN
+# ## CLIENT LOGIN - post, delete
 
 @app.post('/api/client_login')
 def login_client():
@@ -92,7 +93,7 @@ def logout_client():
     else: 
         return make_response(json.dumps('sorry error', default=str), 500)       
 
-#  ## RESTARUANTS
+#  ## RESTARUANTS - get
 @app.get('/api/restaurants')
 def get_all_restaurants():
     results = dbh.run_statement('CALL restaurants_get_all')
@@ -100,7 +101,8 @@ def get_all_restaurants():
         return make_response(json.dumps(results, default=str), 200)
     else:
         return make_response(json.dumps("sorry, error", default=str), 500)    
-# ## RESTAURANT
+
+# ## RESTAURANT -get, post, (patch, delete)
 @app.get('/api/restaurant')
 def get_restaurant():
     is_valid = apih.check_endpoint_info(request.args, ['id'])
@@ -127,7 +129,7 @@ def create_restaurant():
         return make_response(json.dumps("sorry error", default=str), 500) 
 
 
-# ## RESTAURANT LOGIN
+# ## RESTAURANT LOGIN - post, delete
 @app.post('/api/restaurant_login')
 def login_restaurant():
     is_valid = apih.check_endpoint_info(request.json, ['email', 'password'])
@@ -154,7 +156,7 @@ def logout_restaurant():
     else:
         return make_response(json.dumps('sorry, error', default=str), 500)
 
-# ###MENU
+# ###MENU - get, post, delete, (patch)
 
 # create_menu procedure works in db, does not hit any errors in postman/vs however also does not insert new item into menu_item table
 @app.post('/api/menu')
@@ -169,7 +171,6 @@ def create_menu():
         return make_response(json.dumps(results, default=str), 200)
     else:
         return make_response(json.dumps("sorry error", default=str), 500)
-
 
 # returns all menu items associated with a restaurant
 @app.get('/api/menu')
@@ -195,6 +196,18 @@ def delete_menu_itme():
         return make_response(json.dumps(results, default=str), 200)
     else:
         return make_response(json.dumps('sorry error', default=str), 500)    
+
+
+# CLIENT_ORDER
+# @app.get('/api/client_order')
+# def get_client_order():
+
+@app.post('api/client_order')
+def create_client_order():
+
+
+
+
 
 if (production_mode == True):
     print("Running in Production Mode")

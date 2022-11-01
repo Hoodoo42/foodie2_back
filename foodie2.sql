@@ -149,8 +149,8 @@ DROP TABLE IF EXISTS `order`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `order` (
   `id` int(10) unsigned NOT NULL,
-  `is_confirmed` tinyint(1) DEFAULT 0,
-  `is_complete` tinyint(1) DEFAULT 0,
+  `is_confirmed` tinyint(1) NOT NULL DEFAULT 0,
+  `is_complete` tinyint(1) NOT NULL DEFAULT 0,
   `restaurant_id` int(10) unsigned DEFAULT NULL,
   `client_id` int(10) unsigned DEFAULT NULL,
   `created_at` date DEFAULT current_timestamp(),
@@ -365,12 +365,12 @@ DELIMITER ;
 /*!50003 SET character_set_results = utf8mb4 */ ;
 /*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `client_order_create`(token_input varchar(100), menu_item_id_input int unsigned, restaurant_id_input int unsigned)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `client_order_create`(token_input varchar(100), restaurant_id_input int unsigned)
     MODIFIES SQL DATA
 BEGIN
 	
-	INSERT INTO `order` (client_id, restaurant_id) VALUES (order_menu_id_input);
-	SELECT order_id FROM order_menu_item;
+	INSERT INTO `order` (restaurant_id) VALUES (order_menu_id_input);
+	SELECT ROW_COUNT();
 	COMMIT;
 END ;;
 DELIMITER ;
@@ -716,4 +716,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-10-31 22:02:20
+-- Dump completed on 2022-10-31 22:37:18
